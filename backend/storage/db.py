@@ -1,10 +1,11 @@
 """SQLite connection manager and schema."""
 import sqlite3
 import threading
-from datetime import datetime
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent.parent / "data" / "trading.db"
+from backend.config import DATA_DIR
+
+DB_PATH = DATA_DIR / "trading.db"
 
 _local = threading.local()
 
@@ -13,6 +14,8 @@ def get_conn() -> sqlite3.Connection:
         _local.conn = sqlite3.connect(str(DB_PATH))
         _local.conn.row_factory = sqlite3.Row
         _local.conn.execute("PRAGMA journal_mode=WAL")
+        _local.conn.execute("PRAGMA foreign_keys=ON")
+        _local.conn.execute("PRAGMA busy_timeout=5000")
     return _local.conn
 
 def init_schema():
@@ -22,7 +25,7 @@ def init_schema():
             symbol TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             industry TEXT,
-            list_date TEXT,
+            list_date TEXT CHECK (list_date IS NULL OR list_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
             is_active INTEGER DEFAULT 1,
             updated_at TEXT
         );
@@ -39,6 +42,9 @@ def init_schema():
             created_at TEXT DEFAULT (datetime('now','localtime'))
         );
 
+        CREATE INDEX IF NOT EXISTS idx_download_log_symbol ON download_log(symbol);
+        CREATE INDEX IF NOT EXISTS idx_download_log_created ON download_log(created_at);
+
         CREATE TABLE IF NOT EXISTS backtest_results (
             id TEXT PRIMARY KEY,
             strategy_name TEXT NOT NULL,
@@ -49,5 +55,8 @@ def init_schema():
             metrics TEXT,
             created_at TEXT DEFAULT (datetime('now','localtime'))
         );
+
+        CREATE INDEX IF NOT EXISTS idx_backtest_strategy ON backtest_results(strategy_name);
+        CREATE INDEX IF NOT EXISTS idx_backtest_created ON backtest_results(created_at);
     """)
     conn.commit()
