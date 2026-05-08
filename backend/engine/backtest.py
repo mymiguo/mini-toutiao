@@ -58,8 +58,8 @@ class BacktestEngine:
             raise ValueError("No data for the given universe and date range")
 
         strategy = strategy_cls(params=params)
-        strategy.data = df
         strategy.portfolio = Portfolio(initial_cash)
+        strategy.data = df
         strategy.init()
 
         trades: list[Trade] = []
@@ -71,13 +71,37 @@ class BacktestEngine:
         peak_equity = initial_cash
         max_dd = 0.0
 
-        for i, dt in enumerate(dates):
+        symbols = list(df["symbol"].unique())
+        bar_idx = 0
+
+        for dt in dates:
             bars = df[df["date"] == dt]
             prices = dict(zip(bars["symbol"], bars["close"]))
 
-            signal = strategy.next(i)
-            if signal:
-                self._execute(signal, bars, strategy.portfolio, open_trades, trades, dt)
+            # Generate signals for all symbols on this date
+            signals: list[Signal] = []
+            for sym in symbols:
+                sym_mask = df["symbol"] == sym
+                sym_rows = df[sym_mask]
+                sym_global_indices = df.index[sym_mask]
+                sym_day_mask = sym_rows["date"] == dt
+                if not sym_day_mask.any():
+                    continue
+                # Find this symbol's row index for today
+                sym_row_idx = sym_rows.index[sym_rows["date"] == dt].tolist()
+                sym_i = sym_rows.index.get_loc(sym_row_idx[0]) if sym_row_idx else 0
+                # Temporarily set data to just this symbol's data
+                orig_data = strategy.data
+                strategy.data = sym_rows.reset_index(drop=True)
+                s = strategy.next(sym_i)
+                strategy.data = orig_data
+                if s:
+                    signals.append(s)
+                bar_idx += 1
+
+            # Execute signals (buys first, then sells)
+            for s in signals:
+                self._execute(s, bars, strategy.portfolio, open_trades, trades, dt)
 
             strategy.portfolio.age_positions()
             equity_value = strategy.portfolio.equity(prices)

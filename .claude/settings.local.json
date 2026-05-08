@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(ls -la node_modules)",
+      "Bash(npx electron *)",
+      "Bash(rm -rf node_modules/electron)",
+      "Bash(set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/)",
+      "Bash(cmd //c \"rmdir /s /q node_modules\\\\electron\")",
+      "Bash(taskkill //f //im \"node.exe\")",
+      "Bash(export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/)",
+      "Bash(npx electron-builder *)",
+      "Bash(npx asar *)",
+      "Bash(./dist/win-unpacked/SuperNotepadAI.exe)",
+      "Bash(powershell *)",
+      "Bash(taskkill //f //im SuperNotepadAI.exe)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\90488\\\\Desktop\\\\file-library\")",
+      "Read(//c/Users/90488/Desktop/**)",
+      "Bash(mkdir -p \"C:/Users/90488/Desktop/my-apps/SuperNotepadAI\")",
+      "Bash(mkdir -p \"C:/Users/90488/Desktop/my-apps/FileLibrary\")",
+      "Bash(mkdir -p \"C:/Users/90488/Desktop/my-apps/dist\")",
+      "Bash(npx electron-packager *)",
+      "Bash(mkdir -p \"C:/Users/90488/.claude\")",
+      "Bash(echo '{\"permissions\":{\"allow\":[\"Bash\\(*\\)\",\"Read\\(*\\)\",\"Write\\(*\\)\",\"Edit\\(*\\)\",\"Glob\\(*\\)\",\"Grep\\(*\\)\",\"WebFetch\\(*\\)\",\"WebSearch\\(*\\)\",\"Skill\\(*\\)\",\"Agent\\(*\\)\",\"TaskCreate\\(*\\)\",\"TaskUpdate\\(*\\)\",\"TaskGet\\(*\\)\",\"TaskList\\(*\\)\",\"AskUserQuestion\\(*\\)\",\"CronCreate\\(*\\)\",\"CronDelete\\(*\\)\",\"CronList\\(*\\)\",\"NotebookEdit\\(*\\)\",\"ScheduleWakeup\\(*\\)\"]}}')"
+    ]
+  }
+}
