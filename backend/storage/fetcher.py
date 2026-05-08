@@ -93,4 +93,5 @@ async def fetch_dragon_tiger(date: Optional[str] = None) -> pd.DataFrame:
 
 async def fetch_money_flow(symbol: str) -> pd.DataFrame:
     sem = asyncio.Semaphore(cfg.get("rate_limit", 10))
-    return await _rate_limited_call(sem, ak.stock_individual_fund_flow, stock=symbol, market="sh")
+    market = "sh" if symbol.startswith("6") else "sz"
+    return await _rate_limited_call(sem, ak.stock_individual_fund_flow, stock=symbol, market=market)
