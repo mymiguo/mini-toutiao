@@ -1,0 +1,43 @@
+"""FastAPI application entry point."""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from loguru import logger
+
+from backend.api.data import router as data_router
+from backend.config import ensure_dirs
+from backend.storage.db import init_schema
+
+app = FastAPI(title="A股交易工具", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(data_router)
+
+@app.on_event("startup")
+async def startup():
+    ensure_dirs()
+    init_schema()
+    logger.info("Backend started on :8765")
+
+@app.exception_handler(Exception)
+async def global_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": type(exc).__name__, "detail": str(exc)}
+    )
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "version": "0.1.0"}
