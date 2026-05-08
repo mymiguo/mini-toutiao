@@ -18,6 +18,8 @@ async def download_daily(symbols: list[str], start_date: str, end_date: str) -> 
     _download_tasks[task_id] = {"status": "running", "done": 0, "total": len(symbols), "errors": []}
     errors = []
 
+    sem = asyncio.Semaphore(3)
+
     async def _dl_one(symbol: str):
         try:
             latest = get_latest_date(symbol)
@@ -27,7 +29,8 @@ async def download_daily(symbols: list[str], start_date: str, end_date: str) -> 
             if actual_start > end_date:
                 logger.info(f"{symbol} is up to date, skipping")
                 return
-            df = await fetch_daily(symbol, actual_start, end_date)
+            async with sem:
+                df = await fetch_daily(symbol, actual_start, end_date)
             if df is not None and not df.empty:
                 cleaned = clean_daily(df)
                 if not cleaned.empty:
@@ -38,7 +41,6 @@ async def download_daily(symbols: list[str], start_date: str, end_date: str) -> 
         finally:
             _download_tasks[task_id]["done"] += 1
 
-    sem = asyncio.Semaphore(3)
     await asyncio.gather(*[_dl_one(s) for s in symbols])
     _download_tasks[task_id]["status"] = "completed"
     _download_tasks[task_id]["errors"] = errors

@@ -1,10 +1,10 @@
 """Clean and validate OHLCV data before storage."""
+from typing import Optional
+
 import pandas as pd
-import numpy as np
-from pathlib import Path
 from loguru import logger
 
-from backend.config import DATA_DIR, CLEANED_DIR
+from backend.config import CLEANED_DIR
 
 
 def clean_daily(df: pd.DataFrame) -> pd.DataFrame:
@@ -20,23 +20,24 @@ def clean_daily(df: pd.DataFrame) -> pd.DataFrame:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     if all(c in df.columns for c in ["open", "high", "low", "close"]):
+        df["is_suspended"] = 0
         mask = (df["open"] == 0) & (df["high"] == 0) & (df["low"] == 0) & (df["close"] == 0)
         df.loc[mask, "is_suspended"] = 1
-        df["is_suspended"] = df["is_suspended"].fillna(0).astype(int)
     return df
 
 
 def save_cleaned(df: pd.DataFrame, symbol: str):
-    """Save cleaned data as Parquet, partitioned by symbol."""
+    """Save cleaned data as Parquet, per-symbol file."""
     out_dir = CLEANED_DIR / "daily"
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{symbol}.parquet"
+    new_rows = len(df)
     if path.exists():
         existing = pd.read_parquet(path)
         df = pd.concat([existing, df], ignore_index=True)
-        df = df.drop_duplicates(subset=["symbol", "date"]).sort_values("date")
+        df = df.drop_duplicates(subset=["symbol", "date"], keep="last").sort_values("date")
     df.to_parquet(path, index=False)
-    logger.info(f"Saved {len(df)} rows for {symbol}")
+    logger.info(f"Saved {len(df)} total rows ({new_rows} new) for {symbol}")
 
 
 def load_cleaned(symbol: str, start: str = None, end: str = None) -> pd.DataFrame:
