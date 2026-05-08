@@ -1,0 +1,51 @@
+{
+  "name": "super-notepad-ai",
+  "version": "1.0.0",
+  "description": "SuperNotepadAI Pro - 智能富文本笔记，集成 DeepSeek AI 辅助写作",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:portable": "electron-builder --win portable",
+    "build:dir": "electron-builder --win dir"
+  },
+  "build": {
+    "appId": "com.supernotepad.ai.pro",
+    "productName": "SuperNotepadAI",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "renderer.js",
+      "config.json",
+      "config.yaml",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "SuperNotepadAI_${version}_portable.exe"
+    }
+  },
+  "keywords": [
+    "notepad",
+    "ai",
+    "electron",
+    "deepseek"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

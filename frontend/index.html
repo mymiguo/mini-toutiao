@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SuperNotepadAI Pro · 智能富文本笔记</title>
+  <!-- Quill 样式 -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <!-- Turndown -->
+  <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.js"></script>
+  <!-- Pinyin Pro -->
+  <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.19.6/dist/index.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: text;
+    }
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      font-family: 'Microsoft YaHei', 'Segoe UI', '微软雅黑', Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #topbar {
+      height: 60px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      z-index: 10;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-right: 8px;
+    }
+    .ai-btn {
+      height: 38px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 20px;
+      background: #eff6ff;
+      color: #1e40af;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s;
+    }
+    .ai-btn:hover {
+      background: #dbeafe;
+      transform: translateY(-1px);
+    }
+    .ai-btn.primary {
+      background: #2563eb;
+      color: white;
+    }
+    .ai-btn.primary:hover {
+      background: #1d4ed8;
+    }
+    #markdownBtn {
+      margin-left: auto;
+    }
+    #layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    #sidebar {
+      width: 280px;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: none;
+    }
+    #newDocBtn {
+      margin: 16px 16px 8px 16px;
+      height: 44px;
+      border: none;
+      border-radius: 14px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    #newDocBtn:hover {
+      background: #1d4ed8;
+    }
+    #searchInput {
+      margin: 8px 16px 12px 16px;
+      height: 40px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0 12px;
+      outline: none;
+      font-size: 14px;
+      background: #f8fafc;
+    }
+    #searchInput:focus {
+      border-color: #3b82f6;
+      background: white;
+    }
+    #fileList {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 8px 16px 8px;
+    }
+    .file-item {
+      padding: 10px 12px;
+      margin-bottom: 4px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-item:hover {
+      background: #f1f5f9;
+    }
+    .file-item.active {
+      background: #dbeafe;
+      border-left: 3px solid #2563eb;
+    }
+    .file-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .file-del {
+      opacity: 0;
+      font-size: 18px;
+      cursor: pointer;
+      color: #94a3b8;
+      transition: 0.1s;
+    }
+    .file-item:hover .file-del {
+      opacity: 1;
+    }
+    .file-del:hover {
+      color: #ef4444;
+    }
+    #center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #f1f5f9;
+      min-width: 0;
+    }
+    #toolbar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    #editor {
+      flex: 1;
+      overflow: auto;
+      background: #eef2f6;
+    }
+    .ql-editor {
+      background: white;
+      max-width: 1000px;
+      margin: 32px auto;
+      padding: 48px 56px;
+      font-size: 16px;
+      line-height: 1.7;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      border-radius: 20px;
+      min-height: 85vh;
+      font-family: 'Microsoft YaHei', 'Segoe UI', '微软雅黑', sans-serif;
+    }
+    .ql-toolbar {
+      border: none !important;
+    }
+    .ql-container {
+      border: none !important;
+    }
+    #markdownPreview {
+      display: none;
+      padding: 48px 56px;
+      overflow: auto;
+      background: white;
+      max-width: 1000px;
+      margin: 32px auto;
+      border-radius: 20px;
+      font-family: 'Fira Code', monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    #resizeBarLeft, #resizeBarRight {
+      width: 6px;
+      cursor: col-resize;
+      background: #e2e8f0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 20;
+      transition: background 0.15s;
+    }
+    #resizeBarLeft::after, #resizeBarRight::after {
+      content: "";
+      position: absolute;
+      inset: -3px -4px;
+    }
+    #resizeBarLeft:hover, #resizeBarRight:hover {
+      background: #3b82f6;
+    }
+    #aiPanel {
+      width: 340px;
+      background: #ffffff;
+      border-left: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    #chatHeader {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      font-weight: 600;
+      background: #fafcff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .model-badge {
+      background: #e6f0ff;
+      color: #2563eb;
+      border-radius: 40px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: normal;
+    }
+    #chatBox {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .msg {
+      padding: 12px 16px;
+      border-radius: 18px;
+      line-height: 1.5;
+      max-width: 95%;
+      word-wrap: break-word;
+    }
+    .msg.user {
+      background: #2563eb;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.ai {
+      background: #f1f5f9;
+      color: #0f172a;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .msg.error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    #chatInputArea {
+      padding: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+    #chatInput {
+      width: 100%;
+      height: 100px;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 12px;
+      resize: none;
+      outline: none;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    #sendBtn {
+      margin-top: 10px;
+      width: 100%;
+      height: 42px;
+      border: none;
+      border-radius: 24px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #sendBtn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    /* AI 选区菜单 */
+    #aiMenu {
+      position: absolute;
+      display: none;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 28px;
+      padding: 8px 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 9999;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+      white-space: nowrap;
+    }
+    #aiMenu button {
+      border: none;
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    #aiMenu button:hover {
+      background: #2563eb;
+      color: white;
+    }
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: white;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 13px;
+      z-index: 10000;
+      opacity: 0.95;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="logo">✍️ SuperNotepadAI Pro</div>
+    <button class="ai-btn" id="topPolishBtn">✨ 润色</button>
+    <button class="ai-btn" id="topSummaryBtn">📄 总结</button>
+    <button class="ai-btn" id="topExpandBtn">📖 扩写</button>
+    <button class="ai-btn" id="topTranslateBtn">🌐 自动翻译</button>
+    <button class="ai-btn" id="topPinyinBtn">🔤 拼音</button>
+    <button class="ai-btn" id="saveBtn" title="Ctrl+S">💾 保存</button>
+    <div style="position:relative">
+      <button class="ai-btn" id="exportMenu" title="导出为其他格式">📂 导出 ▼</button>
+      <div id="exportDropdown" style="display:none;position:absolute;top:44px;right:0;background:white;border:1px solid #e2e8f0;border-radius:12px;padding:6px;box-shadow:0 8px 20px rgba(0,0,0,0.1);z-index:100;flex-direction:column;gap:2px;min-width:180px">
+        <button data-format="json" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">📦 另存为 JSON (保留格式)</button>
+        <button data-format="md" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">📝 导出 Markdown</button>
+        <button data-format="txt" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">📃 导出 TXT 纯文本</button>
+        <button data-format="html" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">🌐 导出 HTML 网页</button>
+        <button data-format="pdf" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">📕 导出 PDF</button>
+        <button data-format="doc" style="display:block;width:100%;border:none;background:none;padding:8px 14px;text-align:left;cursor:pointer;border-radius:8px;font-size:13px" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='none'">📘 导出 Word (.doc)</button>
+      </div>
+    </div>
+    <button class="ai-btn primary" id="markdownBtn">📝 预览MD</button>
+  </div>
+
+  <div id="layout">
+    <div id="sidebar">
+      <button id="newDocBtn">➕ 新建文档</button>
+      <input id="searchInput" placeholder="🔍 搜索文档...">
+      <div id="fileList"></div>
+    </div>
+
+    <div id="resizeBarLeft"></div>
+
+    <div id="center">
+      <div id="toolbar">
+        <select class="ql-size"></select>
+        <button class="ql-bold"></button>
+        <button class="ql-italic"></button>
+        <button class="ql-underline"></button>
+        <select class="ql-color"></select>
+        <select class="ql-background"></select>
+      </div>
+      <div id="editor"></div>
+      <div id="markdownPreview"></div>
+      <div id="aiMenu">
+        <button data-action="polish">✨ 润色</button>
+        <button data-action="summary">📌 总结</button>
+        <button data-action="expand">📖 扩写</button>
+        <button data-action="shorten">✂️ 缩短</button>
+        <button data-action="translate">🌐 自动翻译</button>
+        <button data-action="pinyin">🔤 拼音</button>
+      </div>
+    </div>
+
+    <div id="resizeBarRight"></div>
+
+    <div id="aiPanel">
+      <div id="chatHeader">
+        ✍️ 小笔 · AI 写作助手 <span class="model-badge">DeepSeek</span>
+      </div>
+      <div id="chatBox"></div>
+      <div id="chatInputArea">
+        <textarea id="chatInput" placeholder="向 DeepSeek 提问... (Shift+Enter 换行，Enter 发送)"></textarea>
+        <button id="sendBtn">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quill 编辑器核心库 -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <!-- 逻辑脚本 -->
+  <script src="renderer.js"></script>
+</body>
+</html>
