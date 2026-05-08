@@ -1,0 +1,17 @@
+# A股交易工具全局配置
+data:
+  raw_dir: data/raw
+  cleaned_dir: data/cleaned
+  cache_dir: data/cache
+  primary_source: akshare
+  fallback_source: baostock
+  rate_limit: 10
+  rate_period: 1
+
+server:
+  host: 127.0.0.1
+  port: 8765
+
+logging:
+  level: INFO
+  retention: 30
