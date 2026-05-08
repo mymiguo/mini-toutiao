@@ -12,6 +12,8 @@ from loguru import logger
 from backend.api.data import router as data_router
 from backend.api.strategy import router as strategy_router
 from backend.api.backtest import router as backtest_router
+from backend.api.optimize import router as optimize_router
+from backend.api.sentiment import router as sentiment_router
 from backend.config import ensure_dirs
 from backend.storage.db import init_schema
 
@@ -27,6 +29,8 @@ app.add_middleware(
 app.include_router(data_router)
 app.include_router(strategy_router)
 app.include_router(backtest_router)
+app.include_router(optimize_router)
+app.include_router(sentiment_router)
 
 @app.on_event("startup")
 async def startup():
