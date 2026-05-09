@@ -21,7 +21,15 @@
       "Bash(mkdir -p \"C:/Users/90488/Desktop/my-apps/dist\")",
       "Bash(npx electron-packager *)",
       "Bash(mkdir -p \"C:/Users/90488/.claude\")",
-      "Bash(echo '{\"permissions\":{\"allow\":[\"Bash\\(*\\)\",\"Read\\(*\\)\",\"Write\\(*\\)\",\"Edit\\(*\\)\",\"Glob\\(*\\)\",\"Grep\\(*\\)\",\"WebFetch\\(*\\)\",\"WebSearch\\(*\\)\",\"Skill\\(*\\)\",\"Agent\\(*\\)\",\"TaskCreate\\(*\\)\",\"TaskUpdate\\(*\\)\",\"TaskGet\\(*\\)\",\"TaskList\\(*\\)\",\"AskUserQuestion\\(*\\)\",\"CronCreate\\(*\\)\",\"CronDelete\\(*\\)\",\"CronList\\(*\\)\",\"NotebookEdit\\(*\\)\",\"ScheduleWakeup\\(*\\)\"]}}')"
+      "Bash(echo '{\"permissions\":{\"allow\":[\"Bash\\(*\\)\",\"Read\\(*\\)\",\"Write\\(*\\)\",\"Edit\\(*\\)\",\"Glob\\(*\\)\",\"Grep\\(*\\)\",\"WebFetch\\(*\\)\",\"WebSearch\\(*\\)\",\"Skill\\(*\\)\",\"Agent\\(*\\)\",\"TaskCreate\\(*\\)\",\"TaskUpdate\\(*\\)\",\"TaskGet\\(*\\)\",\"TaskList\\(*\\)\",\"AskUserQuestion\\(*\\)\",\"CronCreate\\(*\\)\",\"CronDelete\\(*\\)\",\"CronList\\(*\\)\",\"NotebookEdit\\(*\\)\",\"ScheduleWakeup\\(*\\)\"]}}')",
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)"
     ]
   }
 }

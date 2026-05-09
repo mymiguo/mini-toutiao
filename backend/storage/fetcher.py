@@ -66,7 +66,11 @@ def _baostock_daily(symbol: str, start: str, end: str) -> pd.DataFrame:
     if lg.error_code != "0":
         raise ConnectionError(f"BaoStock login failed: {lg.error_msg}")
     try:
-        code = ("sh." if symbol.startswith("6") else "sz.") + symbol
+        # Shanghai: 5xxxxx(ETF), 6xxxxx(stock), 9xxxxx(B-share)
+        if symbol.startswith(("5", "6", "9")):
+            code = "sh." + symbol
+        else:
+            code = "sz." + symbol
         rs = bs.query_history_k_data_plus(
             code, "date,open,high,low,close,volume,amount",
             start_date=start, end_date=end, frequency="d",

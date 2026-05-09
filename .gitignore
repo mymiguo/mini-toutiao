@@ -6,3 +6,4 @@ dist/
 *.db-shm
 *.db-wal
 backend/data/
+qq_bridge_config.json

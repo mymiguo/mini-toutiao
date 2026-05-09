@@ -1,0 +1,11 @@
+{
+    "appid": "你的QQ机器人AppID",
+    "appsecret": "你的QQ机器人AppSecret",
+    "claude_path": "C:\\Users\\你的用户名\\AppData\\Roaming\\npm\\claude.cmd",
+    "project_dir": "C:\\Users\\你的用户名\\Desktop\\claude01",
+    "session_ttl": 1800,
+    "claude_timeout": 300,
+    "max_msg_len": 3800,
+    "chunk_delay": 0.6,
+    "rate_limit": 3
+}

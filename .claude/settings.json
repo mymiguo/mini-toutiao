@@ -1,5 +1,14 @@
 {
   "enabledPlugins": {
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "agent-skills@addy-agent-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "addy-agent-skills": {
+      "source": {
+        "source": "directory",
+        "path": "C:/Users/90488/Desktop/agent-skills"
+      }
+    }
   }
 }
