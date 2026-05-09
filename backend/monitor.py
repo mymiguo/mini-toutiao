@@ -150,6 +150,65 @@ def generate_report():
     return report, alerts
 
 
+def send_email(report, alerts):
+    """Send monitoring report via 163.com SMTP."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    # Build HTML table
+    buys = [r for r in report if r["signal"] == "BUY"]
+    holds = [r for r in report if r["signal"] == "HOLD"]
+    cashes = [r for r in report if r["signal"] == "CASH"]
+
+    html = f"""
+    <h2>📊 A股策略监控报告 — {today}</h2>
+    <p>BUY: {len(buys)} | HOLD: {len(holds)} | CASH: {len(cashes)}</p>
+    """
+
+    if alerts:
+        html += "<h3>⚠️ 信号异动</h3><ul>"
+        for a in alerts:
+            html += f"<li>{a}</li>"
+        html += "</ul>"
+
+    # Group by sector
+    sectors = {}
+    for r in report:
+        sectors.setdefault(r["sector"], []).append(r)
+
+    for sector, stocks in sorted(sectors.items()):
+        html += f"<h4>{sector}</h4>"
+        html += """<table border='1' cellpadding='4' cellspacing='0' style='border-collapse:collapse;font-size:12px'>
+        <tr style='background:#333;color:#fff'><th>代码</th><th>名称</th><th>现价</th><th>MA200</th><th>强度</th><th>RSI</th><th>MACD</th><th>状态</th><th>信号</th></tr>"""
+        for s in sorted(stocks, key=lambda x: x["strength"], reverse=True):
+            bg = "#e8f5e9" if s["signal"] == "BUY" else ("#fff3e0" if s["signal"] == "HOLD" else "#ffebee")
+            html += f"""<tr style='background:{bg}'>
+            <td>{s['code']}</td><td>{s['name']}</td><td>{s['price']}</td><td>{s['ma200']}</td>
+            <td>{s['strength']:+.1%}</td><td>{s['rsi']:.0f}</td><td>{s['macd']}</td>
+            <td>{s['regime']}</td><td><b>{s['signal']}</b></td></tr>"""
+        html += "</table><br>"
+
+    msg = MIMEMultipart()
+    msg["From"] = "gbaobao@163.com"
+    msg["To"] = "gbaobao@163.com"
+    msg["Subject"] = f"📊 A股策略监控报告 — {today} ({len(buys)} BUY)"
+    msg.attach(MIMEText(html, "html", "utf-8"))
+
+    try:
+        server = smtplib.SMTP_SSL("smtp.163.com", 465)
+        server.login("gbaobao@163.com", "TEhF2gtv8wmScuV9")
+        server.sendmail("gbaobao@163.com", ["gbaobao@163.com"], msg.as_string())
+        server.quit()
+        print("Email sent successfully!")
+        return True
+    except Exception as e:
+        print(f"Email failed: {e}")
+        return False
+
+
 if __name__ == "__main__":
     print(f"=== Monitor {datetime.now().strftime('%Y-%m-%d %H:%M')} ===")
     update_data()
@@ -160,8 +219,9 @@ if __name__ == "__main__":
         for a in alerts:
             print(f"  {a}")
 
-    # Summary by signal
     buys = [r for r in report if r["signal"] == "BUY"]
     holds = [r for r in report if r["signal"] == "HOLD"]
     cashes = [r for r in report if r["signal"] == "CASH"]
     print(f"\nBUY: {len(buys)} | HOLD: {len(holds)} | CASH: {len(cashes)}")
+
+    send_email(report, alerts)
