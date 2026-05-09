@@ -19,6 +19,17 @@ _TEMPLATES = {
         },
         "description": "EMA交叉+RSI过滤+成交量确认+ATR动态止损，适合稳健趋势跟踪"
     },
+    "adaptive_quant": {
+        "name": "自适应量化(专业版)",
+        "class": "backend.strategies.adaptive_quant.AdaptiveQuant",
+        "params": {
+            "fast": 10, "slow": 30, "mom_period": 20,
+            "atr_period": 14, "use_volume": True,
+            "max_pos_pct": 0.15, "vol_target": 0.15,
+            "kelly_frac": 0.25, "bear_mode": "defensive"
+        },
+        "description": "市场状态识别+多信号融合+Kelly仓位管理+ATR止损，专业级自适应策略"
+    },
 }
 
 def list_templates() -> list[dict]:
