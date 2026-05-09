@@ -67,22 +67,28 @@ class RiskManager:
         if signal_strength == 0 or price <= 0:
             return PositionSize(0, 0.0, 0.0, "no signal")
 
-        # 1. Kelly-optimized risk allocation
-        if win_rate > 0 and avg_win_loss_ratio > 0:
-            kelly_f = win_rate - (1 - win_rate) / avg_win_loss_ratio
-            kelly_f = max(0.01, min(kelly_f, 0.25))  # Cap Kelly at 25%
-        else:
+        # 1. Kelly-optimized risk allocation (with NaN guards)
+        try:
+            if pd.notna(win_rate) and pd.notna(avg_win_loss_ratio) and win_rate > 0 and avg_win_loss_ratio > 0:
+                kelly_f = win_rate - (1 - win_rate) / avg_win_loss_ratio
+                kelly_f = max(0.01, min(float(kelly_f), 0.25))
+            else:
+                kelly_f = 0.05
+        except (ValueError, ZeroDivisionError):
             kelly_f = 0.05
 
-        risk_pct = kelly_f * self.kelly_fraction * abs(signal_strength)
+        risk_pct = float(kelly_f) * self.kelly_fraction * abs(signal_strength)
 
-        # 2. Volatility targeting adjustment
-        if atr and atr > 0 and price > 0:
-            daily_vol = atr / price
-            annual_vol = daily_vol * np.sqrt(252)
-            if annual_vol > 0:
-                vol_scalar = self.vol_target / annual_vol
-                risk_pct *= min(vol_scalar, 1.5)  # Cap volatility adjustment
+        # 2. Volatility targeting adjustment (with NaN guard)
+        try:
+            if atr is not None and pd.notna(atr) and float(atr) > 0 and price > 0:
+                daily_vol = float(atr) / price
+                annual_vol = daily_vol * np.sqrt(252)
+                if annual_vol > 0:
+                    vol_scalar = min(self.vol_target / annual_vol, 1.5)
+                    risk_pct *= vol_scalar
+        except (ValueError, TypeError, ZeroDivisionError):
+            pass
 
         # 3. Max position cap
         risk_pct = min(risk_pct, self.max_position_pct)
@@ -99,16 +105,21 @@ class RiskManager:
             return PositionSize(0, 0.0, 0.0, "dd limit")
 
         # 6. Calculate shares (round to 100-share lots)
-        capital_at_risk = portfolio_value * risk_pct
-        if atr and atr > 0:
-            stop_distance = atr * 2.0
-            shares = int(capital_at_risk / stop_distance / 100) * 100 if stop_distance > 0 else 0
-        else:
-            shares = int(capital_at_risk / price / 100) * 100
+        try:
+            capital_at_risk = float(portfolio_value) * float(risk_pct)
+            stop_distance = float(price) * 0.05
+            if atr is not None and pd.notna(atr) and float(atr) > 0:
+                stop_distance = float(atr) * 2.0
+            stop_distance = max(stop_distance, float(price) * 0.02)
+            shares = int(capital_at_risk / stop_distance / 100) * 100
+            max_shares = int(portfolio_value * risk_pct / price / 100) * 100
+            shares = max(0, min(shares, max_shares))
+        except (ValueError, TypeError, ZeroDivisionError):
+            shares = 0
 
-        shares = max(100, min(shares, int(portfolio_value * risk_pct / price / 100) * 100))
+        shares = max(0, shares)  # ensure non-negative
 
-        stop_price = round(price - atr * 2.0, 2) if atr else round(price * 0.95, 2)
+        stop_price = round(price - atr * 2.0, 2) if (atr is not None and pd.notna(atr)) else round(price * 0.95, 2)
 
         return PositionSize(
             shares=shares,

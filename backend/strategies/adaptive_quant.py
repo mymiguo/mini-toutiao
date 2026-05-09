@@ -85,9 +85,13 @@ class AdaptiveQuant(BaseStrategy):
 
         # Don't enter in bear / choppy (only exit)
         p = self.params
-        if regime_result.regime in (Regime.TRENDING_DOWN, Regime.CHOPPY):
+        if regime_result.regime == Regime.TRENDING_DOWN:
             if p.get("bear_mode", "defensive") == "defensive":
                 return None
+        # In choppy: allow entries but with higher threshold
+        entry_threshold = 0.3
+        if regime_result.regime == Regime.CHOPPY:
+            entry_threshold = 0.5
 
         # 2. Compute alpha signals
         combiner = SignalCombiner()
@@ -109,10 +113,10 @@ class AdaptiveQuant(BaseStrategy):
 
         composite = combiner.composite(weights)
 
-        if composite < 0.2 and symbol in pf.positions and pf.can_sell(symbol):
+        if composite < 0.1 and symbol in pf.positions and pf.can_sell(symbol):
             return Signal(symbol=symbol, action="SELL", size=0)
 
-        if composite < 0.3:
+        if composite < entry_threshold:
             return None
 
         # 4. Position sizing via RiskManager
