@@ -1,0 +1,19 @@
+{
+  "name": "mymiguo-tools",
+  "owner": {
+    "name": "mymiguo"
+  },
+  "metadata": {
+    "description": "mymiguo 的个人 Claude Code 工具集"
+  },
+  "plugins": [
+    {
+      "name": "qq-bot-bridge",
+      "source": {
+        "source": "github",
+        "repo": "mymiguo/mini-toutiao"
+      },
+      "description": "QQ 机器人桥接 Claude Code，支持远程操控、多轮对话、长文本分段"
+    }
+  ]
+}

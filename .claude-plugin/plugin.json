@@ -1,0 +1,13 @@
+{
+  "name": "qq-bot-bridge",
+  "description": "通过 QQ 官方机器人远程操控 Claude Code。收到 QQ 私聊消息 → 转发给 Claude CLI → 回复结果。支持多轮对话续接、长文本分段、速率限制。",
+  "version": "1.0.0",
+  "author": {
+    "name": "mymiguo"
+  },
+  "homepage": "https://github.com/mymiguo/mini-toutiao",
+  "repository": "https://github.com/mymiguo/mini-toutiao",
+  "license": "MIT",
+  "commands": "./.claude/commands",
+  "skills": "./.claude/skills"
+}
